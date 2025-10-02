@@ -1,0 +1,353 @@
+[info] Migrando 26 tabelas com concorrência=4, batchSize=1000...
+[progress] agencies iniciando
+[progress] agencies 0% iniciando
+[progress] agencies 0% dump/stream (batches)
+[progress] agencies 0% preparando schema (aguardando)
+[progress] alerts iniciando
+[progress] alerts 0% iniciando
+[progress] alerts 0% dump/stream (batches)
+[progress] alerts 0% preparando schema (aguardando)
+[progress] cities iniciando
+[progress] cities 0% iniciando
+[progress] cities 0% dump/stream (batches)
+[progress] cities 0% preparando schema (aguardando)
+[progress] commerce_committee_taxes iniciando
+[progress] commerce_committee_taxes 0% iniciando
+[progress] commerce_committee_taxes 0% dump/stream (batches)
+[progress] commerce_committee_taxes 0% preparando schema (aguardando)
+[progress] agencies 0% preparando schema (executando)
+[progress] alerts 0% preparando schema (executando)
+[progress] agencies 0% copiando dados
+[progress] cities 0% preparando schema (executando)
+[progress] alerts 0% copiando dados
+[progress] commerce_committee_taxes 0% preparando schema (executando)
+[progress] cities 0% copiando dados
+[progress] agencies 100% copiando dados (4/4)
+[progress] agencies 100% verificando
+[info] [verify] agencies: 4/4 OK
+[progress] agencies 100% finalizando
+[progress] agencies 100% concluída
+[progress] deadlines iniciando
+[progress] deadlines 0% iniciando
+[progress] deadlines 0% dump/stream (batches)
+[progress] deadlines 0% preparando schema (aguardando)
+[progress] deadlines 0% preparando schema (executando)
+[progress] commerce_committee_taxes 0% copiando dados
+[progress] alerts 100% copiando dados (182/182)
+[progress] alerts 100% verificando
+[progress] deadlines 0% copiando dados
+[info] [verify] alerts: 182/182 OK
+[progress] alerts 100% finalizando
+[progress] alerts 100% concluída
+[progress] failed_jobs iniciando
+[progress] failed_jobs 0% iniciando
+[progress] failed_jobs 0% dump/stream (batches)
+[progress] failed_jobs 0% preparando schema (aguardando)
+[progress] failed_jobs 0% preparando schema (executando)
+[progress] cities 17% copiando dados (1000/5572)
+[progress] cities 35% copiando dados (2000/5572)
+[progress] commerce_committee_taxes 100% copiando dados (948/948)
+[progress] failed_jobs 0% copiando dados
+[progress] cities 53% copiando dados (3000/5572)
+[progress] commerce_committee_taxes 100% verificando
+[progress] cities 71% copiando dados (4000/5572)
+[info] [verify] commerce_committee_taxes: 948/948 OK
+[progress] commerce_committee_taxes 100% finalizando
+[progress] commerce_committee_taxes 100% concluída
+[progress] migrations iniciando
+[progress] migrations 0% iniciando
+[progress] migrations 0% dump/stream (batches)
+[progress] migrations 0% preparando schema (aguardando)
+[progress] migrations 0% preparando schema (executando)
+[progress] cities 89% copiando dados (5000/5572)
+[progress] deadlines 83% copiando dados (1000/1201)
+[progress] cities 99% copiando dados (5570/5572)
+[progress] deadlines 100% copiando dados (1208/1201)
+[progress] cities 99% verificando
+[progress] failed_jobs 0% verificando
+[progress] deadlines 100% verificando
+[info] [verify] cities: 5570/5570 OK
+[progress] cities 99% finalizando
+[progress] cities 100% concluída
+[progress] oauth_access_tokens iniciando
+[progress] oauth_access_tokens 0% iniciando
+[progress] oauth_access_tokens 0% dump/stream (batches)
+[progress] oauth_access_tokens 0% preparando schema (aguardando)
+[info] [verify] failed_jobs: 0/0 OK
+[progress] failed_jobs 0% finalizando
+[progress] failed_jobs 100% concluída
+[progress] oauth_auth_codes iniciando
+[progress] oauth_auth_codes 0% iniciando
+[progress] oauth_auth_codes 0% dump/stream (batches)
+[progress] oauth_auth_codes 0% preparando schema (aguardando)
+[progress] oauth_access_tokens 0% preparando schema (executando)
+[info] [verify] deadlines: 1208/1208 OK
+[progress] deadlines 100% finalizando
+[progress] deadlines 100% concluída
+[progress] oauth_clients iniciando
+[progress] oauth_clients 0% iniciando
+[progress] oauth_clients 0% dump/stream (batches)
+[progress] oauth_clients 0% preparando schema (aguardando)
+[progress] migrations 0% copiando dados
+[progress] oauth_auth_codes 0% preparando schema (executando)
+[progress] oauth_access_tokens 0% copiando dados
+[progress] migrations 100% copiando dados (35/35)
+[progress] migrations 100% verificando
+[info] [verify] migrations: 35/35 OK
+[progress] migrations 100% finalizando
+[progress] migrations 100% concluída
+[progress] oauth_personal_access_clients iniciando
+[progress] oauth_personal_access_clients 0% iniciando
+[progress] oauth_personal_access_clients 0% dump/stream (batches)
+[progress] oauth_personal_access_clients 0% preparando schema (aguardando)
+[progress] oauth_clients 0% preparando schema (executando)
+[progress] oauth_auth_codes 0% copiando dados
+[progress] oauth_personal_access_clients 0% preparando schema (executando)
+[progress] oauth_clients 0% copiando dados
+[progress] oauth_access_tokens 25% copiando dados (1000/3865)
+[progress] oauth_auth_codes 0% verificando
+[progress] oauth_access_tokens 51% copiando dados (2000/3865)
+[info] [verify] oauth_auth_codes: 0/0 OK
+[progress] oauth_auth_codes 0% finalizando
+[progress] oauth_auth_codes 100% concluída
+[progress] oauth_refresh_tokens iniciando
+[progress] oauth_refresh_tokens 0% iniciando
+[progress] oauth_refresh_tokens 0% dump/stream (batches)
+[progress] oauth_refresh_tokens 0% preparando schema (aguardando)
+[progress] oauth_refresh_tokens 0% preparando schema (executando)
+[progress] oauth_personal_access_clients 0% copiando dados
+[progress] oauth_clients 1% copiando dados (1)
+[progress] oauth_access_tokens 77% copiando dados (3000/3865)
+[progress] oauth_clients 1% verificando
+[progress] oauth_access_tokens 100% copiando dados (3910/3865)
+[info] [verify] oauth_clients: 1/1 OK
+[progress] oauth_clients 1% finalizando
+[progress] oauth_clients 100% concluída
+[progress] password_resets iniciando
+[progress] password_resets 0% iniciando
+[progress] password_resets 0% dump/stream (batches)
+[progress] password_resets 0% preparando schema (aguardando)
+[progress] password_resets 0% preparando schema (executando)
+[progress] oauth_refresh_tokens 0% copiando dados
+[progress] oauth_access_tokens 100% verificando
+[info] [verify] oauth_access_tokens: 3910/3910 OK
+[progress] oauth_access_tokens 100% finalizando
+[progress] oauth_access_tokens 100% concluída
+[progress] payment_methods iniciando
+[progress] payment_methods 0% iniciando
+[progress] payment_methods 0% dump/stream (batches)
+[progress] payment_methods 0% preparando schema (aguardando)
+[progress] oauth_personal_access_clients 0% verificando
+[info] [verify] oauth_personal_access_clients: 0/0 OK
+[progress] oauth_personal_access_clients 0% finalizando
+[progress] oauth_personal_access_clients 100% concluída
+[progress] permission_role iniciando
+[progress] permission_role 0% iniciando
+[progress] permission_role 0% dump/stream (batches)
+[progress] permission_role 0% preparando schema (aguardando)
+[progress] payment_methods 0% preparando schema (executando)
+[progress] password_resets 0% copiando dados
+[progress] permission_role 0% preparando schema (executando)
+[progress] payment_methods 0% copiando dados
+[progress] oauth_refresh_tokens 26% copiando dados (1000/3841)
+[progress] password_resets 0% verificando
+[info] [verify] password_resets: 0/0 OK
+[progress] password_resets 0% finalizando
+[progress] password_resets 100% concluída
+[progress] permissions iniciando
+[progress] permissions 0% iniciando
+[progress] permissions 0% dump/stream (batches)
+[progress] permissions 0% preparando schema (aguardando)
+[progress] permissions 0% preparando schema (executando)
+[progress] permission_role 0% copiando dados
+[progress] payment_methods 100% copiando dados (3/3)
+[progress] oauth_refresh_tokens 52% copiando dados (2000/3841)
+[progress] payment_methods 100% verificando
+[progress] oauth_refresh_tokens 78% copiando dados (3000/3841)
+[info] [verify] payment_methods: 3/3 OK
+[progress] payment_methods 100% finalizando
+[progress] payment_methods 100% concluída
+[progress] personal_access_tokens iniciando
+[progress] personal_access_tokens 0% iniciando
+[progress] personal_access_tokens 0% dump/stream (batches)
+[progress] personal_access_tokens 0% preparando schema (aguardando)
+[progress] oauth_refresh_tokens 100% copiando dados (3910/3841)
+[progress] personal_access_tokens 0% preparando schema (executando)
+[progress] permissions 0% copiando dados
+[progress] permission_role 100% copiando dados (10/10)
+[progress] oauth_refresh_tokens 100% verificando
+[progress] permission_role 100% verificando
+[info] [verify] oauth_refresh_tokens: 3910/3910 OK
+[progress] oauth_refresh_tokens 100% finalizando
+[progress] oauth_refresh_tokens 100% concluída
+[progress] plan_prices iniciando
+[progress] plan_prices 0% iniciando
+[progress] plan_prices 0% dump/stream (batches)
+[progress] plan_prices 0% preparando schema (aguardando)
+[info] [verify] permission_role: 10/10 OK
+[progress] permission_role 100% finalizando
+[progress] permission_role 100% concluída
+[progress] plans iniciando
+[progress] plans 0% iniciando
+[progress] plans 0% dump/stream (batches)
+[progress] plans 0% preparando schema (aguardando)
+[progress] plan_prices 0% preparando schema (executando)
+[progress] personal_access_tokens 0% copiando dados
+[progress] permissions 100% copiando dados (9/9)
+[progress] permissions 100% verificando
+[info] [verify] permissions: 9/9 OK
+[progress] permissions 100% finalizando
+[progress] permissions 100% concluída
+[progress] proposals iniciando
+[progress] proposals 0% iniciando
+[progress] proposals 0% dump/stream (batches)
+[progress] proposals 0% preparando schema (aguardando)
+[progress] plans 0% preparando schema (executando)
+[progress] plan_prices 0% copiando dados
+[progress] personal_access_tokens 0% verificando
+[info] [verify] personal_access_tokens: 0/0 OK
+[progress] personal_access_tokens 0% finalizando
+[progress] personal_access_tokens 100% concluída
+[progress] role_user iniciando
+[progress] role_user 0% iniciando
+[progress] role_user 0% dump/stream (batches)
+[progress] role_user 0% preparando schema (aguardando)
+[progress] proposals 0% preparando schema (executando)
+[progress] plans 0% copiando dados
+[progress] plan_prices 100% copiando dados (102/101)
+[progress] plan_prices 100% verificando
+[info] [verify] plan_prices: 102/102 OK
+[progress] plan_prices 100% finalizando
+[progress] plan_prices 100% concluída
+[progress] roles iniciando
+[progress] roles 0% iniciando
+[progress] roles 0% dump/stream (batches)
+[progress] roles 0% preparando schema (aguardando)
+[progress] role_user 0% preparando schema (executando)
+[progress] proposals 0% copiando dados
+[progress] plans 100% copiando dados (11/11)
+[progress] plans 100% verificando
+[info] [verify] plans: 11/11 OK
+[progress] plans 100% finalizando
+[progress] plans 100% concluída
+[progress] services iniciando
+[progress] services 0% iniciando
+[progress] services 0% dump/stream (batches)
+[progress] services 0% preparando schema (aguardando)
+[progress] roles 0% preparando schema (executando)
+[progress] role_user 0% copiando dados
+[progress] services 0% preparando schema (executando)
+[progress] proposals 3% copiando dados (1000/28372)
+[progress] roles 0% copiando dados
+[progress] role_user 100% copiando dados (66/64)
+[progress] proposals 7% copiando dados (2000/28372)
+[progress] role_user 100% verificando
+[info] [verify] role_user: 66/66 OK
+[progress] role_user 100% finalizando
+[progress] role_user 100% concluída
+[progress] settings iniciando
+[progress] settings 0% iniciando
+[progress] settings 0% dump/stream (batches)
+[progress] settings 0% preparando schema (aguardando)
+[progress] settings 0% preparando schema (executando)
+[progress] services 0% copiando dados
+[progress] roles 100% copiando dados (2/2)
+[progress] proposals 10% copiando dados (3000/28372)
+[progress] proposals 14% copiando dados (4000/28372)
+[progress] roles 100% verificando
+[info] [verify] roles: 2/2 OK
+[progress] roles 100% finalizando
+[progress] roles 100% concluída
+[progress] states iniciando
+[progress] states 0% iniciando
+[progress] states 0% dump/stream (batches)
+[progress] states 0% preparando schema (aguardando)
+[progress] states 0% preparando schema (executando)
+[progress] proposals 17% copiando dados (5000/28372)
+[progress] settings 0% copiando dados
+[progress] proposals 21% copiando dados (6000/28372)
+[progress] proposals 24% copiando dados (7000/28372)
+[progress] services 100% copiando dados (10/9)
+[progress] proposals 28% copiando dados (8000/28372)
+[progress] services 100% verificando
+[progress] states 0% copiando dados
+[progress] proposals 31% copiando dados (9000/28372)
+[info] [verify] services: 10/10 OK
+[progress] services 100% finalizando
+[progress] services 100% concluída
+[progress] users iniciando
+[progress] users 0% iniciando
+[progress] users 0% dump/stream (batches)
+[progress] users 0% preparando schema (aguardando)
+[progress] users 0% preparando schema (executando)
+[progress] settings 100% copiando dados (12/12)
+[progress] proposals 35% copiando dados (10000/28372)
+[progress] settings 100% verificando
+[progress] proposals 38% copiando dados (11000/28372)
+[info] [verify] settings: 12/12 OK
+[progress] settings 100% finalizando
+[progress] settings 100% concluída
+[progress] proposals 42% copiando dados (12000/28372)
+[progress] states 100% copiando dados (27/27)
+[progress] proposals 45% copiando dados (13000/28372)
+[progress] users 0% copiando dados
+[progress] proposals 49% copiando dados (14000/28372)
+[progress] states 100% verificando
+[info] [verify] states: 27/27 OK
+[progress] states 100% finalizando
+[progress] states 100% concluída
+[progress] proposals 52% copiando dados (15000/28372)
+[progress] proposals 56% copiando dados (16000/28372)
+[progress] proposals 59% copiando dados (17000/28372)
+[progress] users 100% copiando dados (65/64)
+[progress] proposals 63% copiando dados (18000/28372)
+[progress] users 100% verificando
+[progress] proposals 66% copiando dados (19000/28372)
+[info] [verify] users: 65/65 OK
+[progress] users 100% finalizando
+[progress] users 100% concluída
+[progress] proposals 70% copiando dados (20000/28372)
+[progress] proposals 74% copiando dados (21000/28372)
+[progress] proposals 77% copiando dados (22000/28372)
+[progress] proposals 81% copiando dados (23000/28372)
+[progress] proposals 84% copiando dados (24000/28372)
+[progress] proposals 88% copiando dados (25000/28372)
+[progress] proposals 91% copiando dados (26000/28372)
+[progress] proposals 95% copiando dados (27000/28372)
+[progress] proposals 98% copiando dados (28000/28372)
+[progress] proposals 100% copiando dados (29000/28372)
+[progress] proposals 100% copiando dados (30000/28372)
+[progress] proposals 100% copiando dados (30188/28372)
+[progress] proposals 100% verificando
+[info] [verify] proposals: 30188/30188 OK
+[progress] proposals 100% finalizando
+[progress] proposals 100% concluída
+[info] Resumo de verificação por tabela:
+ - agencies: 4/4 OK
+ - alerts: 182/182 OK
+ - cities: 5570/5570 OK
+ - commerce_committee_taxes: 948/948 OK
+ - deadlines: 1208/1208 OK
+ - failed_jobs: 0/0 OK
+ - migrations: 35/35 OK
+ - oauth_access_tokens: 3910/3910 OK
+ - oauth_auth_codes: 0/0 OK
+ - oauth_clients: 1/1 OK
+ - oauth_personal_access_clients: 0/0 OK
+ - oauth_refresh_tokens: 3910/3910 OK
+ - password_resets: 0/0 OK
+ - payment_methods: 3/3 OK
+ - permission_role: 10/10 OK
+ - permissions: 9/9 OK
+ - personal_access_tokens: 0/0 OK
+ - plan_prices: 102/102 OK
+ - plans: 11/11 OK
+ - proposals: 30188/30188 OK
+ - role_user: 66/66 OK
+ - roles: 2/2 OK
+ - services: 10/10 OK
+ - settings: 12/12 OK
+ - states: 27/27 OK
+ - users: 65/65 OK
+[ok] Migração concluída com sucesso.
+[ok] Finalizado em 6.2s

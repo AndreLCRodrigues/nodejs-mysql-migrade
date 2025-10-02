@@ -1,0 +1,31 @@
+{
+  "name": "mysql-migrate",
+  "version": "1.0.0",
+  "description": "CLI para migrar tabelas de um banco MySQL/MariaDB para outro, com streaming em batches, paralelismo e verificação.",
+  "main": "src/index.js",
+  "type": "module",
+  "bin": {
+    "mysql-migrate": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "migrate": "node src/index.js",
+    "dry": "DRY_RUN=1 node src/index.js"
+  },
+  "keywords": [
+    "mysql",
+    "mariadb",
+    "migration",
+    "streaming",
+    "batch"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "cli-progress": "^3.12.0",
+    "dotenv": "^16.4.5",
+    "mysql2": "^3.10.3",
+    "p-limit": "^5.0.0"
+  }
+}

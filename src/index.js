@@ -1,4 +1,18 @@
 #!/usr/bin/env node
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Check if .env exists, if not, copy from .env.example
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const envPath = path.join(__dirname, '..', '.env');
+const examplePath = path.join(__dirname, '..', '.env.example');
+if (!fs.existsSync(envPath)) {
+  if (fs.existsSync(examplePath)) {
+    fs.copyFileSync(examplePath, envPath);
+  }
+}
+
 import { loadConfig } from './config.js';
 import { migrate, restoreAllForeignKeys } from './migrate.js';
 import { logger } from './logger.js';

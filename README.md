@@ -90,6 +90,24 @@ npm start
 - `npm start` ou `npm run migrate`: roda a migração
 - `npm run dry`: modo simulação (DRY_RUN=1)
 
+## Docker
+
+Para executar a migração usando Docker, primeiro construa a imagem:
+
+```bash
+docker build -t mysql-migrate .
+```
+
+Para executar a migração, mapeie o arquivo `.env` do host para o container. Se o arquivo `.env` não existir no diretório atual, o container criará um baseado no `.env.example`:
+
+```bash
+docker run --rm -v $(pwd)/.env:/app/.env mysql-migrate
+```
+
+Os logs serão exibidos no terminal, da mesma forma que ao executar `node src/migrate.js` localmente.
+
+Certifique-se de que o arquivo `.env` contenha as configurações necessárias, como hosts, usuários e senhas dos bancos de dados de origem e destino.
+
 ## Licença
 
 ISC

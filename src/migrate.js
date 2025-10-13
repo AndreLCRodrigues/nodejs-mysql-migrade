@@ -1,14 +1,7 @@
 import { createPools, listTables } from './db.js';
 import createProgress from './progress.js';
 import { logger } from './logger.js';
-
-// Helper: fetch DDL from source
-async function getCreateTableDDL(srcPool, table) {
-  const [ddlRows] = await srcPool.query(`SHOW CREATE TABLE \`${table}\``);
-  const ddl = ddlRows?.[0]?.['Create Table'] || ddlRows?.[0]?.Create || Object.values(ddlRows?.[0] || {})[1];
-  if (!ddl) throw new Error(`Falha ao obter DDL de ${table}`);
-  return ddl;
-}
+import readline from 'readline';
 
 async function getPLimit(concurrency) {
   try {
@@ -85,49 +78,67 @@ function extractAndStripFKs(sql) {
   }
 }
 
-async function copyTableStreaming(cfg, pools, table, onPhase, progress, schemaLimit) {
+async function getSourceAutoIncrement(srcPool, dbName, table) {
+  const [rows] = await srcPool.query(
+    'SELECT AUTO_INCREMENT AS ai FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME=?',
+    [dbName, table]
+  );
+  const ai = rows?.[0]?.ai;
+  return Number.isFinite(ai) ? ai : null;
+}
+
+async function copyTableStreaming(cfg, pools, table, onPhase, progress, schemaLimit, options = { doDDL: true, doData: true }) {
   let srcRaw = null;
   let dstConn = null;
   let fkClauses = [];
   try {
-    onPhase('preparando schema (aguardando)');
+    if (options.doDDL) {
+      onPhase('preparando schema (aguardando)');
 
-    await schemaLimit(async () => {
-      onPhase('preparando schema (executando)');
-      const [ddlRows] = await withTimeout(
-        pools.src.query(`SHOW CREATE TABLE \`${table}\``),
-        cfg.ddlTimeoutMs,
-        `SHOW CREATE TABLE ${table}`
-      );
-      let createSql = ddlRows?.[0]?.['Create Table'] || ddlRows?.[0]?.Create || Object.values(ddlRows?.[0] || {})[1];
-      if (!createSql) throw new Error(`Falha ao obter DDL de ${table}`);
-      if (cfg.stripFK) {
-        const out = extractAndStripFKs(createSql);
-        createSql = out.ddl;
-        fkClauses = out.fks;
-      }
+      await schemaLimit(async () => {
+        onPhase('preparando schema (executando)');
+        const [ddlRows] = await withTimeout(
+          pools.src.query(`SHOW CREATE TABLE \`${table}\``),
+          cfg.ddlTimeoutMs,
+          `SHOW CREATE TABLE ${table}`
+        );
+        let createSql = ddlRows?.[0]?.['Create Table'] || ddlRows?.[0]?.Create || Object.values(ddlRows?.[0] || {})[1];
+        if (!createSql) throw new Error(`Falha ao obter DDL de ${table}`);
+        if (cfg.stripFK) {
+          const out = extractAndStripFKs(createSql);
+          createSql = out.ddl;
+          fkClauses = out.fks;
+        }
 
-      // Use short-lived destination connection for DDL
-      const ddlConn = await pools.dst.getConnection();
-      try {
-        // Set session lock timeouts
+        const ddlConn = await pools.dst.getConnection();
         try {
-          const lockSec = Math.max(1, Math.floor((cfg.ddlTimeoutMs || 120000) / 1000));
-          await ddlConn.query(`SET SESSION lock_wait_timeout=${lockSec}`);
-          await ddlConn.query(`SET SESSION innodb_lock_wait_timeout=${lockSec}`);
-        } catch {}
-        // Disable checks for DDL session to tolerate FK order
-        try {
-          await ddlConn.query('SET FOREIGN_KEY_CHECKS=0');
-          await ddlConn.query('SET UNIQUE_CHECKS=0');
-        } catch {}
+          try {
+            const lockSec = Math.max(1, Math.floor((cfg.ddlTimeoutMs || 120000) / 1000));
+            await ddlConn.query(`SET SESSION lock_wait_timeout=${lockSec}`);
+            await ddlConn.query(`SET SESSION innodb_lock_wait_timeout=${lockSec}`);
+          } catch {}
+          try {
+            await ddlConn.query('SET FOREIGN_KEY_CHECKS=0');
+            await ddlConn.query('SET UNIQUE_CHECKS=0');
+          } catch {}
 
-        await withTimeout(ddlConn.query(`DROP TABLE IF EXISTS \`${table}\``), cfg.ddlTimeoutMs, `DROP ${table}`);
-        await withTimeout(ddlConn.query(createSql), cfg.ddlTimeoutMs, `CREATE ${table}`);
-      } finally {
-        ddlConn.release();
-      }
-    });
+          await withTimeout(ddlConn.query(`DROP TABLE IF EXISTS \`${table}\``), cfg.ddlTimeoutMs, `DROP ${table}`);
+          await withTimeout(ddlConn.query(createSql), cfg.ddlTimeoutMs, `CREATE ${table}`);
+
+          // Set AUTO_INCREMENT from source so new registros não conflitem com dados adiados
+          const ai = await getSourceAutoIncrement(pools.src, cfg.src.database, table);
+          if (ai) {
+            await withTimeout(ddlConn.query(`ALTER TABLE \`${table}\` AUTO_INCREMENT = ${ai}`), cfg.ddlTimeoutMs, `AUTO_INCREMENT ${table}`);
+          }
+        } finally {
+          ddlConn.release();
+        }
+      });
+    }
+
+    if (!options.doData) {
+      return { fks: fkClauses };
+    }
 
     // Estimate total for progress
     const totalEst = await estimateRowCount(pools.src, cfg.src.database, table);
@@ -203,6 +214,12 @@ async function copyTableStreaming(cfg, pools, table, onPhase, progress, schemaLi
       });
 
       await dstConn.commit();
+
+      // After copy, ensure AUTO_INCREMENT matches source (optional, usually unchanged)
+      const ai = await getSourceAutoIncrement(pools.src, cfg.src.database, table);
+      if (ai) {
+        await withTimeout(dstConn.query(`ALTER TABLE \`${table}\` AUTO_INCREMENT = ${ai}`), cfg.ddlTimeoutMs, `AUTO_INCREMENT ${table}`);
+      }
     } finally {
       try { await dstConn.query('SET UNIQUE_CHECKS=1'); } catch {}
       try { await dstConn.query('SET FOREIGN_KEY_CHECKS=1'); } catch {}
@@ -284,6 +301,9 @@ export async function migrate(cfg) {
       return;
     }
 
+    const noDataSet = new Set(cfg.noDataTables || []);
+    const deferSet = new Set(cfg.deferDataTables || []);
+
     const progress = await createProgress();
 
     logger.info(`Migrando ${tables.length} tabelas com concorrência=${cfg.concurrency}, batchSize=${cfg.batchSize}...`);
@@ -293,22 +313,24 @@ export async function migrate(cfg) {
       try {
         progress.update?.(table, 0, 'iniciando');
         if (cfg.dryRun) {
-          progress.update?.(table, 1, 'simulando dump');
-          progress.update?.(table, 2, 'simulando restore');
+          progress.update?.(table, 1, 'simulando schema');
+          progress.update?.(table, 2, 'simulando dados');
           progress.done(table);
           return;
         }
 
-        // Streaming copy with schema-limited DDL
-        progress.update?.(table, 0, 'dump/stream (batches)');
+        const doDDL = true;
+        const doData = !(noDataSet.has(table) || deferSet.has(table));
+        progress.update?.(table, 0, doData ? 'dump/stream (batches)' : 'apenas schema');
         const res = await copyTableStreaming(cfg, { src, dst }, table, (phase) => {
           progress.update?.(table, undefined, phase);
-        }, progress, schemaLimit);
+        }, progress, schemaLimit, { doDDL, doData });
+
         if (cfg.stripFK && cfg.restoreFK && res?.fks?.length) {
-          fkMap[table] = res.fks.slice();
+          fkMap[table] = (fkMap[table] || []).concat(res.fks);
         }
 
-        if (cfg.verify) {
+        if (doData && cfg.verify) {
           progress.update?.(table, undefined, 'verificando');
           const { src: cSrc, dst: cDst } = await verifyTableCounts(src, dst, table);
           if (cSrc !== cDst) {
@@ -336,8 +358,86 @@ export async function migrate(cfg) {
     const failedTables = results
       .map((r, i) => (r.status === 'rejected' ? tables[i] : null))
       .filter(Boolean);
-    progress.stop();
 
+    // Stop the first multibar before any interactive prompt
+    try { progress.stop(); } catch {}
+
+    // If there are deferred tables, optionally wait for user approval to start copying them
+    if (deferSet.size) {
+      const deferred = tables.filter(t => deferSet.has(t));
+      if (!cfg.deferAutoStart) {
+        if (process.stdin.isTTY) {
+          const msg = `Foram adiadas ${deferred.length} tabela(s): ${deferred.join(', ')}\nPressione ENTER para iniciar a importação das tabelas adiadas...`;
+          await new Promise((resolve) => {
+            const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+            rl.question(msg + '\n', () => { rl.close(); resolve(); });
+          });
+        } else {
+          logger.info(`Foram adiadas ${deferred.length} tabela(s): ${deferred.join(', ')}`);
+          logger.info('Iniciando fase adiada automaticamente (STDIN não interativo).');
+        }
+      }
+
+      logger.info('Iniciando importação das tabelas adiadas...');
+      const deferredProgress = await createProgress();
+      const deferredTasks = deferred.map((table) => limit(async () => {
+        const bar = deferredProgress.addTable(table);
+        try {
+          // Accurate total and stable cutoff when PK integer exists
+          const pkInfo = await getPrimaryKeyColumn(src, cfg.src.database, table);
+          if (pkInfo && isIntegerDataType(pkInfo.dataType)) {
+            const cutoffId = await getMaxPk(src, table, pkInfo.name);
+            const total = await countUpToPk(src, table, pkInfo.name, cutoffId);
+            if (total && deferredProgress?.setTotal) deferredProgress.setTotal(table, total);
+            await copyTableDeferredWithCutoff(cfg, { src, dst }, table, pkInfo.name, cutoffId, deferredProgress);
+            if (cfg.verify) {
+              const srcCount = await countUpToPk(src, table, pkInfo.name, cutoffId);
+              const [dstRows] = await dst.query(`SELECT COUNT(*) AS c FROM \`${table}\``);
+              const dstCount = dstRows?.[0]?.c ?? 0;
+              if (srcCount !== dstCount) {
+                logger.warn(`[verify] ${table}: origem<=cutoff=${srcCount} destino=${dstCount} (diferença)`);
+              } else {
+                logger.info(`[verify] ${table}: ${dstCount}/${srcCount} OK`);
+              }
+            }
+          } else {
+            // Fallback: reuse generic streaming (might show approximate progress)
+            deferredProgress.update?.(table, 0, 'copiando dados (adiadas)');
+            const res = await copyTableStreaming(cfg, { src, dst }, table, (phase) => {
+              deferredProgress.update?.(table, undefined, phase);
+            }, deferredProgress, schemaLimit, { doDDL: false, doData: true });
+            if (cfg.stripFK && cfg.restoreFK && res?.fks?.length) {
+              fkMap[table] = (fkMap[table] || []).concat(res.fks);
+            }
+            if (cfg.verify) {
+              const [sRows] = await src.query(`SELECT COUNT(*) AS c FROM \`${table}\``);
+              const [dRows] = await dst.query(`SELECT COUNT(*) AS c FROM \`${table}\``);
+              const sc = sRows?.[0]?.c ?? 0;
+              const dc = dRows?.[0]?.c ?? 0;
+              if (sc !== dc) logger.warn(`[verify] ${table}: origem=${sc} destino=${dc} (diferença possível)`);
+              else logger.info(`[verify] ${table}: ${dc}/${sc} OK`);
+            }
+          }
+          deferredProgress.done(table);
+        } catch (e) {
+          deferredProgress.update?.(table, undefined, 'erro');
+          const msg = e?.sqlMessage || e?.message || String(e);
+          logger.error(`Tabela (adiada) ${table}:`, msg);
+          throw e;
+        } finally {
+          bar?.stop?.();
+        }
+      }));
+
+      const deferredResults = await Promise.allSettled(deferredTasks);
+      const deferredFailed = deferredResults
+        .map((r, i) => (r.status === 'rejected' ? deferred[i] : null))
+        .filter(Boolean);
+      try { deferredProgress.stop(); } catch {}
+      failedTables.push(...deferredFailed);
+    }
+
+    // Restore FKs at the end (after deferred too)
     if (cfg.restoreFK && Object.keys(fkMap).length) {
       logger.info('[fk] Restaurando chaves estrangeiras...');
       const { added, failed } = await restoreForeignKeys(cfg, dst, fkMap, schemaLimit);
@@ -359,20 +459,27 @@ export async function migrate(cfg) {
       logger.warn(msg);
     }
 
+    // Final explicit success after all phases
     logger.success('Migração concluída com sucesso.');
   } finally {
     await end();
   }
 }
 
-export async function restoreAllForeignKeys(cfg) {
+async function restoreAllForeignKeys(cfg) {
   const schemaLimit = await getPLimit(Math.max(1, cfg.schemaConcurrency));
   const { src, dst, end } = await createPools(cfg);
   try {
-    let tables = [];
-    if (cfg.include?.length) tables = cfg.include.slice();
-    else tables = await listTables(src, cfg.src.database);
-    if (cfg.exclude?.length) tables = tables.filter(t => !new Set(cfg.exclude).has(t));
+    let tables;
+    if (cfg.include?.length) {
+      tables = cfg.include.slice();
+    } else {
+      tables = await listTables(src, cfg.src.database);
+    }
+    if (cfg.exclude?.length) {
+      const ex = new Set(cfg.exclude);
+      tables = tables.filter(t => !ex.has(t));
+    }
     tables.sort((a,b)=>a.localeCompare(b));
 
     const fkMap = {};
@@ -405,4 +512,112 @@ export async function restoreAllForeignKeys(cfg) {
   }
 }
 
+export { restoreAllForeignKeys };
+
 export default migrate;
+
+async function getPrimaryKeyColumn(srcPool, dbName, table) {
+  const [rows] = await srcPool.query(
+    `SELECT k.COLUMN_NAME, c.DATA_TYPE
+     FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS t
+     JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
+       ON t.CONSTRAINT_NAME = k.CONSTRAINT_NAME
+      AND t.TABLE_SCHEMA = k.TABLE_SCHEMA
+      AND t.TABLE_NAME = k.TABLE_NAME
+     JOIN INFORMATION_SCHEMA.COLUMNS c
+       ON c.TABLE_SCHEMA = k.TABLE_SCHEMA
+      AND c.TABLE_NAME = k.TABLE_NAME
+      AND c.COLUMN_NAME = k.COLUMN_NAME
+     WHERE t.TABLE_SCHEMA = ?
+       AND t.TABLE_NAME = ?
+       AND t.CONSTRAINT_TYPE = 'PRIMARY KEY'
+     ORDER BY k.ORDINAL_POSITION
+     LIMIT 1`, [dbName, table]
+  );
+  if (!rows?.length) return null;
+  return { name: rows[0].COLUMN_NAME, dataType: String(rows[0].DATA_TYPE || '').toLowerCase() };
+}
+
+function isIntegerDataType(dt) {
+  return ['tinyint','smallint','mediumint','int','integer','bigint'].includes(dt);
+}
+
+async function getMaxPk(srcPool, table, pk) {
+  const [rows] = await srcPool.query(`SELECT MAX(\`${pk}\`) AS maxId FROM \`${table}\``);
+  return rows?.[0]?.maxId ?? null;
+}
+
+async function countUpToPk(srcPool, table, pk, cutoff) {
+  if (cutoff == null) return 0;
+  const [rows] = await srcPool.query(`SELECT COUNT(*) AS c FROM \`${table}\` WHERE \`${pk}\` <= ?`, [cutoff]);
+  return rows?.[0]?.c ?? 0;
+}
+
+async function copyTableDeferredWithCutoff(cfg, pools, table, pk, cutoffId, progress) {
+  const srcConn = await pools.src.getConnection();
+  const dstConn = await pools.dst.getConnection();
+  let srcRaw = null;
+  try {
+    const mysqlRaw = await import('mysql2');
+    srcRaw = mysqlRaw.createConnection({
+      host: cfg.src.host,
+      port: cfg.src.port,
+      user: cfg.src.user,
+      password: cfg.src.password,
+      database: cfg.src.database,
+    });
+
+    await dstConn.query('SET FOREIGN_KEY_CHECKS=0');
+    await dstConn.query('SET UNIQUE_CHECKS=0');
+
+    // Optional lock timeouts
+    try {
+      const lockSec = Math.max(1, Math.floor((cfg.flushTimeoutMs || 300000) / 1000));
+      await dstConn.query(`SET SESSION lock_wait_timeout=${lockSec}`);
+      await dstConn.query(`SET SESSION innodb_lock_wait_timeout=${lockSec}`);
+    } catch {}
+
+    const BATCH_SIZE = cfg.batchSize;
+    let last = null;
+    let copied = 0;
+
+    await dstConn.beginTransaction();
+
+    for (;;) {
+      const [rows] = await srcConn.query(
+        `SELECT * FROM \`${table}\`
+         WHERE ${last==null? '1=1' : `\`${pk}\` > ?`} AND \`${pk}\` <= ?
+         ORDER BY \`${pk}\`
+         LIMIT ?`,
+        last==null ? [cutoffId, BATCH_SIZE] : [last, cutoffId, BATCH_SIZE]
+      );
+
+      if (!rows.length) break;
+
+      const columns = Object.keys(rows[0]);
+      const colList = columns.map(c => `\`${c}\``).join(',');
+      const placeholdersRow = `(${columns.map(() => '?').join(',')})`;
+      const placeholders = new Array(rows.length).fill(placeholdersRow).join(',');
+      const sql = `INSERT INTO \`${table}\` (${colList}) VALUES ${placeholders}`;
+      const params = [];
+      for (const r of rows) {
+        for (const c of columns) params.push(r[c]);
+      }
+      await withTimeout(dstConn.query(sql, params), cfg.flushTimeoutMs, `INSERT batch em ${table}`);
+      copied += rows.length;
+      if (progress?.update) progress.update(table, copied, `copiando dados (${copied})`);
+      last = rows[rows.length - 1][pk];
+    }
+
+    await dstConn.commit();
+  } catch (e) {
+    try { await dstConn.rollback(); } catch {}
+    throw e;
+  } finally {
+    try { await dstConn.query('SET UNIQUE_CHECKS=1'); } catch {}
+    try { await dstConn.query('SET FOREIGN_KEY_CHECKS=1'); } catch {}
+    srcConn.release();
+    dstConn.release();
+    try { srcRaw && srcRaw.end(); } catch {}
+  }
+}

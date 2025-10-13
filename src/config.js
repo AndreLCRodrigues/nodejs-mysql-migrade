@@ -32,6 +32,9 @@ export function loadConfig() {
     stripFK: toBool(process.env.STRIP_FK ?? '1', true),
     restoreFK: toBool(process.env.RESTORE_FK ?? '1', true),
     failOnError: toBool(process.env.FAIL_ON_ERROR ?? '1', true),
+    noDataTables: (process.env.NO_DATA_TABLES || '').split(',').map(s=>s.trim()).filter(Boolean),
+    deferDataTables: (process.env.DEFER_DATA_TABLES || '').split(',').map(s=>s.trim()).filter(Boolean),
+    deferAutoStart: toBool(process.env.DEFER_AUTO_START ?? '0', false),
     src: {
       host: process.env.SRC_HOST || 'localhost',
       port: parseIntDef(process.env.SRC_PORT, 3306),

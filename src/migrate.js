@@ -173,6 +173,11 @@ async function copyTableStreaming(cfg, pools, table, onPhase, progress, schemaLi
         await dstConn.query(`SET SESSION innodb_lock_wait_timeout=${lockSec}`);
       } catch {}
 
+      // Truncate table if dataOnly and truncate enabled
+      if (cfg.dataOnly && cfg.dataOnlyTruncate) {
+        await withTimeout(dstConn.query(`TRUNCATE TABLE \`${table}\``), cfg.ddlTimeoutMs, `TRUNCATE ${table}`);
+      }
+
       // Open a raw source connection for streaming
       const mysqlRaw = await import('mysql2');
       srcRaw = mysqlRaw.createConnection({

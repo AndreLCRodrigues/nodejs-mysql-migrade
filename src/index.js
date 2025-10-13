@@ -3,6 +3,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Generate timestamp for log file name
+const now = new Date();
+const timestamp = now.toISOString().replace('T', '_').replace(/:/g, '-').split('.')[0];
+process.env.LOG_FILE = `migration_${timestamp}`;
+
 // Check if .env exists, if not, copy from .env.example
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(__dirname, '..', '.env');
@@ -79,6 +84,7 @@ async function main() {
       `  RESTORE_FK=1/0 (padrão: 1; recria FKs após importar dados)\n` +
       `  RESTORE_FK_ONLY=1 (apenas recria FKs; não copia dados)\n` +
       `  DATA_ONLY=1 (apenas copia dados; não cria schemas)\n` +
+      `  DATA_ONLY_TRUNCATE=1 (trunca tabelas antes de inserir dados no modo DATA_ONLY)\n` +
       `  FAIL_ON_ERROR=1/0 (padrão: 1; encerra com erro se tabelas falharem)\n` +
       `  INCLUDE_TABLES=t1,t2,t3 | EXCLUDE_TABLES=t4,t5\n` +
       `  VERIFY=1 para verificar contagem src/dst por tabela (padrão: 1)\n` +

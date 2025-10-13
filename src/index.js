@@ -44,7 +44,7 @@ async function preflight(cfg) {
       user: cfg.src.user,
       password: cfg.src.password,
       database: cfg.src.database,
-      maxAllowedPacket: 67108864,
+      maxAllowedPacket: cfg.maxAllowedPacket,
     });
     await src.query('SELECT 1');
     await src.end();
@@ -60,6 +60,7 @@ async function preflight(cfg) {
       password: cfg.dst.password,
       database: cfg.dst.database,
       multipleStatements: true,
+      maxAllowedPacket: cfg.maxAllowedPacket,
     });
     await dst.query('SELECT 1');
     await dst.end();
@@ -79,6 +80,7 @@ async function main() {
       `  CONCURRENCY=N (padrão: CPUs)\n` +
       `  SCHEMA_CONCURRENCY=N (padrão: 1; limita DDL paralelos)\n` +
       `  BATCH_SIZE=N (padrão: 1000 linhas por INSERT)\n` +
+      `  MAX_ALLOWED_PACKET_MB=N (padrão: 64 MB)\n` +
       `  DDL_TIMEOUT_MS (padrão: 120000), FLUSH_TIMEOUT_MS (padrão: 300000)\n` +
       `  STRIP_FK=1/0 (padrão: 1; remove FKs do CREATE durante import)\n` +
       `  RESTORE_FK=1/0 (padrão: 1; recria FKs após importar dados)\n` +

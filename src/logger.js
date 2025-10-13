@@ -8,7 +8,8 @@ if (!fs.existsSync(logsDir)) {
 }
 
 // Create write stream for log file
-const logStream = fs.createWriteStream(path.join(logsDir, 'migration.log'), { flags: 'a' });
+const logFileName = process.env.LOG_FILE || 'migration.log';
+const logStream = fs.createWriteStream(path.join(logsDir, logFileName), { flags: 'a' });
 
 let chalk = null;
 try {

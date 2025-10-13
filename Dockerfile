@@ -7,3 +7,5 @@ RUN npm ci --only=production
 
 COPY src/ ./src/
 COPY .env.example ./
+
+CMD ["npm", "start"]

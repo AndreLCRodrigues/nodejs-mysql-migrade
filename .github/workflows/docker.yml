@@ -16,6 +16,9 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
 
+      - name: Set lowercase owner
+        run: echo "OWNER_LOWER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Gerar timestamp
         id: timestamp
         run: echo "timestamp=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
@@ -37,8 +40,8 @@ jobs:
           context: .
           file: ./Dockerfile
           tags: |
-            ghcr.io/${{ github.repository_owner }}/mysql-migrate:latest
-            ghcr.io/${{ github.repository_owner }}/mysql-migrate:cache
-            ghcr.io/${{ github.repository_owner }}/mysql-migrate:${{ steps.timestamp.outputs.timestamp }}
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/mysql-migrate:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/mysql-migrate:cache,mode=max
+            ghcr.io/${{ env.OWNER_LOWER }}/mysql-migrate:latest
+            ghcr.io/${{ env.OWNER_LOWER }}/mysql-migrate:cache
+            ghcr.io/${{ env.OWNER_LOWER }}/mysql-migrate:${{ steps.timestamp.outputs.timestamp }}
+          cache-from: type=registry,ref=ghcr.io/${{ env.OWNER_LOWER }}/mysql-migrate:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.OWNER_LOWER }}/mysql-migrate:cache,mode=max

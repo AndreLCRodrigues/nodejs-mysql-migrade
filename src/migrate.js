@@ -470,7 +470,7 @@ async function restoreAllForeignKeys(cfg) {
   const schemaLimit = await getPLimit(Math.max(1, cfg.schemaConcurrency));
   const { src, dst, end } = await createPools(cfg);
   try {
-    let tables;
+    let tables = [];
     if (cfg.include?.length) {
       tables = cfg.include.slice();
     } else {

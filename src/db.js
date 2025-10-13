@@ -21,6 +21,7 @@ export async function createPools(cfg) {
     decimalNumbers: true,
     supportBigNumbers: true,
     dateStrings: true,
+    maxAllowedPacket: 67108864,
   });
 
   const dst = await mysql.createPool({
@@ -34,6 +35,7 @@ export async function createPools(cfg) {
     decimalNumbers: true,
     supportBigNumbers: true,
     dateStrings: true,
+    maxAllowedPacket: 67108864,
   });
 
   return {
@@ -54,4 +56,3 @@ export async function listTables(pool, database) {
 }
 
 export default { createPools, listTables };
-

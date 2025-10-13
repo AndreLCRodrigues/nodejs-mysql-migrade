@@ -102,8 +102,12 @@ async function copyTableStreaming(cfg, pools, table, onPhase, progress, schemaLi
           cfg.ddlTimeoutMs,
           `SHOW CREATE TABLE ${table}`
         );
-        let createSql = ddlRows?.[0]?.['Create Table'] || ddlRows?.[0]?.Create || Object.values(ddlRows?.[0] || {})[1];
+        let createSql = ddlRows?.[0]?.['Create Table'] || ddlRows?.[0]?.['Create View'] || ddlRows?.[0]?.Create || Object.values(ddlRows?.[0] || {})[1];
         if (!createSql) throw new Error(`Falha ao obter DDL de ${table}`);
+        const isView = createSql.trim().toUpperCase().startsWith('CREATE VIEW');
+        if (isView) {
+          options.doData = false; // Views don't have data to copy
+        }
         if (cfg.stripFK) {
           const out = extractAndStripFKs(createSql);
           createSql = out.ddl;
@@ -123,12 +127,23 @@ async function copyTableStreaming(cfg, pools, table, onPhase, progress, schemaLi
           } catch {}
 
           await withTimeout(ddlConn.query(`DROP TABLE IF EXISTS \`${table}\``), cfg.ddlTimeoutMs, `DROP ${table}`);
-          await withTimeout(ddlConn.query(createSql), cfg.ddlTimeoutMs, `CREATE ${table}`);
+          try {
+            await withTimeout(ddlConn.query(createSql), cfg.ddlTimeoutMs, `CREATE ${table}`);
+          } catch (ddlError) {
+            if (isView) {
+              logger.warn(`DDL falhou para view ${table}, pulando: ${ddlError.message}`);
+              return { fks: [] }; // Skip the rest for views
+            } else {
+              throw ddlError;
+            }
+          }
 
           // Set AUTO_INCREMENT from source so new registros não conflitem com dados adiados
-          const ai = await getSourceAutoIncrement(pools.src, cfg.src.database, table);
-          if (ai) {
-            await withTimeout(ddlConn.query(`ALTER TABLE \`${table}\` AUTO_INCREMENT = ${ai}`), cfg.ddlTimeoutMs, `AUTO_INCREMENT ${table}`);
+          if (!isView) {
+            const ai = await getSourceAutoIncrement(pools.src, cfg.src.database, table);
+            if (ai) {
+              await withTimeout(ddlConn.query(`ALTER TABLE \`${table}\` AUTO_INCREMENT = ${ai}`), cfg.ddlTimeoutMs, `AUTO_INCREMENT ${table}`);
+            }
           }
         } finally {
           ddlConn.release();
@@ -166,6 +181,7 @@ async function copyTableStreaming(cfg, pools, table, onPhase, progress, schemaLi
         user: cfg.src.user,
         password: cfg.src.password,
         database: cfg.src.database,
+        maxAllowedPacket: 67108864,
       });
 
       const query = srcRaw.query({ sql: `SELECT * FROM \`${table}\``, rowsAsArray: false });
@@ -319,8 +335,8 @@ export async function migrate(cfg) {
           return;
         }
 
-        const doDDL = true;
-        const doData = !(noDataSet.has(table) || deferSet.has(table));
+        const doDDL = !cfg.dataOnly;
+        const doData = cfg.dataOnly || !(noDataSet.has(table) || deferSet.has(table));
         progress.update?.(table, 0, doData ? 'dump/stream (batches)' : 'apenas schema');
         const res = await copyTableStreaming(cfg, { src, dst }, table, (phase) => {
           progress.update?.(table, undefined, phase);
@@ -346,7 +362,7 @@ export async function migrate(cfg) {
         progress.done(table);
       } catch (e) {
         progress.update?.(table, undefined, 'erro');
-        const msg = e?.sqlMessage || e?.message || String(e);
+        const msg = e.stack || e.message || String(e);
         logger.error(`Tabela ${table}:`, msg);
         throw e;
       } finally {
@@ -489,7 +505,7 @@ async function restoreAllForeignKeys(cfg) {
         cfg.ddlTimeoutMs,
         `SHOW CREATE TABLE ${table}`
       );
-      const createSql = ddlRows?.[0]?.['Create Table'] || ddlRows?.[0]?.Create || Object.values(ddlRows?.[0] || {})[1];
+      const createSql = ddlRows?.[0]?.['Create Table'] || ddlRows?.[0]?.['Create View'] || ddlRows?.[0]?.Create || Object.values(ddlRows?.[0] || {})[1];
       if (!createSql) continue;
       const out = extractAndStripFKs(createSql);
       if (out.fks?.length) fkMap[table] = out.fks;
@@ -565,6 +581,7 @@ async function copyTableDeferredWithCutoff(cfg, pools, table, pk, cutoffId, prog
       user: cfg.src.user,
       password: cfg.src.password,
       database: cfg.src.database,
+      maxAllowedPacket: 67108864,
     });
 
     await dstConn.query('SET FOREIGN_KEY_CHECKS=0');

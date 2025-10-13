@@ -31,6 +31,7 @@ export function loadConfig() {
     flushTimeoutMs: parseIntDef(process.env.FLUSH_TIMEOUT_MS, 300000),
     stripFK: toBool(process.env.STRIP_FK ?? '1', true),
     restoreFK: toBool(process.env.RESTORE_FK ?? '1', true),
+    dataOnly: toBool(process.env.DATA_ONLY, false),
     failOnError: toBool(process.env.FAIL_ON_ERROR ?? '1', true),
     noDataTables: (process.env.NO_DATA_TABLES || '').split(',').map(s=>s.trim()).filter(Boolean),
     deferDataTables: (process.env.DEFER_DATA_TABLES || '').split(',').map(s=>s.trim()).filter(Boolean),

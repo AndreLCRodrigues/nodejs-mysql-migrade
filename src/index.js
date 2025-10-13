@@ -39,6 +39,7 @@ async function preflight(cfg) {
       user: cfg.src.user,
       password: cfg.src.password,
       database: cfg.src.database,
+      maxAllowedPacket: 67108864,
     });
     await src.query('SELECT 1');
     await src.end();
@@ -77,6 +78,7 @@ async function main() {
       `  STRIP_FK=1/0 (padrão: 1; remove FKs do CREATE durante import)\n` +
       `  RESTORE_FK=1/0 (padrão: 1; recria FKs após importar dados)\n` +
       `  RESTORE_FK_ONLY=1 (apenas recria FKs; não copia dados)\n` +
+      `  DATA_ONLY=1 (apenas copia dados; não cria schemas)\n` +
       `  FAIL_ON_ERROR=1/0 (padrão: 1; encerra com erro se tabelas falharem)\n` +
       `  INCLUDE_TABLES=t1,t2,t3 | EXCLUDE_TABLES=t4,t5\n` +
       `  VERIFY=1 para verificar contagem src/dst por tabela (padrão: 1)\n` +

@@ -27,7 +27,6 @@ export function loadConfig() {
     concurrency: parseIntDef(process.env.CONCURRENCY, Math.min(4, Math.max(2, os.cpus()?.length || 2))),
     schemaConcurrency: parseIntDef(process.env.SCHEMA_CONCURRENCY, 1),
     batchSize: parseIntDef(process.env.BATCH_SIZE, 1000),
-    maxAllowedPacket: parseIntDef(process.env.MAX_ALLOWED_PACKET_MB, 64) * 1024 * 1024,
     ddlTimeoutMs: parseIntDef(process.env.DDL_TIMEOUT_MS, 120000),
     flushTimeoutMs: parseIntDef(process.env.FLUSH_TIMEOUT_MS, 300000),
     stripFK: toBool(process.env.STRIP_FK ?? '1', true),

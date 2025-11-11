@@ -21,7 +21,6 @@ export async function createPools(cfg) {
     decimalNumbers: true,
     supportBigNumbers: true,
     dateStrings: true,
-    maxAllowedPacket: cfg.maxAllowedPacket,
   });
 
   const dst = await mysql.createPool({
@@ -35,7 +34,6 @@ export async function createPools(cfg) {
     decimalNumbers: true,
     supportBigNumbers: true,
     dateStrings: true,
-    maxAllowedPacket: cfg.maxAllowedPacket,
   });
 
   return {

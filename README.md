@@ -84,7 +84,6 @@ npm start
 ## Limitações e dicas
 - O progresso em % é aproximado com InnoDB; o valor final e a verificação por contagem são a fonte de verdade.
 - Transação é por tabela; para tabelas enormes, isso pode gerar transações longas. Se necessário, podemos alternar para “commit por batch” (melhora latência/locks com custo de atomicidade por tabela).
-- max_allowed_packet no destino deve suportar o tamanho dos batches escolhidos.
 
 ## Scripts
 - `npm start` ou `npm run migrate`: roda a migração

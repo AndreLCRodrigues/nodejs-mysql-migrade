@@ -186,7 +186,7 @@ async function copyTableStreaming(cfg, pools, table, onPhase, progress, schemaLi
         user: cfg.src.user,
         password: cfg.src.password,
         database: cfg.src.database,
-        maxAllowedPacket: 67108864,
+        maxAllowedPacket: cfg.maxAllowedPacket,
       });
 
       const query = srcRaw.query({ sql: `SELECT * FROM \`${table}\``, rowsAsArray: false });
@@ -586,7 +586,7 @@ async function copyTableDeferredWithCutoff(cfg, pools, table, pk, cutoffId, prog
       user: cfg.src.user,
       password: cfg.src.password,
       database: cfg.src.database,
-      maxAllowedPacket: 67108864,
+      maxAllowedPacket: cfg.maxAllowedPacket,
     });
 
     await dstConn.query('SET FOREIGN_KEY_CHECKS=0');
